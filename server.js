@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
         user: "tirumulatirumula201@gmail.com",
-        pass: "pnbcqpotvudbeicl"   // your Gmail App Password
+        pass: "pnbcqpotvudbeicl"
     }
 });
 
@@ -64,16 +64,20 @@ RAM: ${ram}%
 Storage: ${storage}%`
         };
 
-       transporter.sendMail(mailOptions, (err, info) => {
-    if (err) {
-        console.log("❌ FULL EMAIL ERROR:");
-        console.log(err);
-        resource.emailStatus = "FAILED";
-    } else {
-        console.log("✅ EMAIL SENT SUCCESS:");
-        console.log(info.response);
-        resource.emailStatus = "SENT";
+        transporter.sendMail(mailOptions, (err, info) => {
+            if (err) {
+                console.log("❌ FULL EMAIL ERROR:");
+                console.log(err);
+                resource.emailStatus = "FAILED";
+            } else {
+                console.log("✅ EMAIL SENT SUCCESS:");
+                console.log(info.response);
+                resource.emailStatus = "SENT";
+            }
+        });
     }
+
+    res.json(resource);
 });
 
 /* DELETE RESOURCE */
