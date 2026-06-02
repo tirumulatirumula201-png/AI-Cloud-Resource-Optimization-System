@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cloud Resource Manager</title>
+</head>
+
+<body>
+
+<h2>Cloud Resource Manager</h2>
+
+<!-- ADD RESOURCE -->
+<h3>Add Resource</h3>
+
+CPU: <input id="cpu"><br><br>
+RAM: <input id="ram"><br><br>
+Storage: <input id="storage"><br><br>
+Usage %: <input id="usage"><br><br>
+
+<button onclick="addResource()">Add</button>
+
+<hr>
+
+<!-- GET DATA -->
+<h3>Resources</h3>
+<button onclick="getResources()">Load Data</button>
+<button onclick="deleteAll()">Delete All</button>
+
+<pre id="output"></pre>
+
+<script>
+
+const baseUrl = "http://localhost:8088/api/resources";
+
+// GET ALL
+function getResources() {
+    fetch(baseUrl)
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("output").innerText =
+            JSON.stringify(data, null, 2);
+    });
+}
+
+// ADD
+function addResource() {
+    const data = {
+        cpu: document.getElementById("cpu").value,
+        ram: document.getElementById("ram").value,
+        storage: document.getElementById("storage").value,
+        usagePercent: document.getElementById("usage").value
+    };
+
+    fetch(baseUrl, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    }).then(() => {
+        alert("Added!");
+        getResources();
+    });
+}
+
+// DELETE ALL
+function deleteAll() {
+    fetch(baseUrl + "/all", {
+        method: "DELETE"
+    }).then(() => {
+        alert("Deleted!");
+        getResources();
+    });
+}
+
+</script>
+
+</body>
+</html>

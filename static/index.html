@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AI Cloud Optimizer Pro</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+padding:20px;
+}
+
+.box{
+max-width:1100px;
+margin:auto;
+background:rgba(255,255,255,0.08);
+padding:20px;
+border-radius:15px;
+}
+
+input{
+padding:10px;
+margin:5px;
+width:30%;
+}
+
+button{
+padding:10px;
+background:#00c6ff;
+border:none;
+color:white;
+font-weight:bold;
+margin:5px;
+cursor:pointer;
+border-radius:5px;
+}
+
+.deleteBtn{
+background:red;
+color:white;
+border:none;
+padding:5px 10px;
+border-radius:5px;
+cursor:pointer;
+}
+
+table{
+width:100%;
+margin-top:20px;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border:1px solid #333;
+text-align:center;
+}
+
+.high{color:red;}
+.normal{color:lightgreen;}
+
+.chart-box{
+display:flex;
+gap:20px;
+margin-top:20px;
+}
+
+canvas{
+background:white;
+border-radius:10px;
+padding:10px;
+width:400px !important;
+height:250px !important;
+}
+
+#aiMsg{
+text-align:center;
+margin-top:15px;
+font-weight:bold;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>☁ AI Cloud Optimizer Pro</h2>
+
+<input type="number" id="cpu" placeholder="CPU %">
+<input type="number" id="ram" placeholder="RAM %">
+<input type="number" id="storage" placeholder="Storage %">
+
+<button onclick="saveResource()">Save Resource</button>
+
+<h3>Total Records: <span id="count">0</span></h3>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>CPU</th>
+<th>RAM</th>
+<th>Storage</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+</table>
+
+<div class="chart-box">
+<canvas id="cpuChart"></canvas>
+<canvas id="pieChart"></canvas>
+</div>
+
+<h3 id="aiMsg"></h3>
+
+</div>
+
+<script>
+
+let cpuChart;
+let pieChart;
+
+window.onload = function(){
+loadResources();
+setInterval(loadResources,5000);
+};
+
+/* SAVE */
+function saveResource(){
+
+const cpu = Number(document.getElementById("cpu").value);
+const ram = Number(document.getElementById("ram").value);
+const storage = Number(document.getElementById("storage").value);
+
+if(!cpu || !ram || !storage){
+alert("Enter all values");
+return;
+}
+
+let data = { cpu, ram, storage };
+
+fetch("/resources", {
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(data)
+})
+.then(()=>loadResources());
+
+fetch("/alert", {
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(data)
+})
+.then(res=>res.json())
+.then(result=>{
+document.getElementById("aiMsg").innerText =
+result.status + " | EMAIL: " + result.emailStatus;
+});
+}
+
+/* DELETE */
+function deleteResource(id){
+fetch(`/resources/${id}`, {
+method:"DELETE"
+})
+.then(()=>loadResources());
+}
+
+/* LOAD */
+function loadResources(){
+
+fetch("/resources")
+.then(res=>res.json())
+.then(data=>{
+
+document.getElementById("count").innerText = data.length;
+
+let rows = "";
+
+data.forEach(x=>{
+
+rows += `
+<tr>
+<td>${x.id}</td>
+<td>${x.cpu}</td>
+<td>${x.ram}</td>
+<td>${x.storage}</td>
+<td class="${x.status==='HIGH'?'high':'normal'}">${x.status}</td>
+<td><button class="deleteBtn" onclick="deleteResource(${x.id})">Delete</button></td>
+</tr>`;
+});
+
+document.getElementById("tableBody").innerHTML = rows;
+
+if(data.length === 0) return;
+
+let latest = data[data.length - 1];
+let last10 = data.slice(-10);
+
+let labels = last10.map((_,i)=>"T"+(i+1));
+let cpu = last10.map(d=>d.cpu);
+
+/* LINE */
+if(!cpuChart){
+cpuChart = new Chart(document.getElementById("cpuChart"),{
+type:"line",
+data:{
+labels,
+datasets:[{label:"CPU",data:cpu,borderColor:"red"}]
+}
+});
+}else{
+cpuChart.data.labels = labels;
+cpuChart.data.datasets[0].data = cpu;
+cpuChart.update();
+}
+
+/* PIE */
+if(!pieChart){
+pieChart = new Chart(document.getElementById("pieChart"),{
+type:"pie",
+data:{
+labels:["CPU","RAM","Storage"],
+datasets:[{
+data:[latest.cpu,latest.ram,latest.storage]
+}]
+}
+});
+}else{
+pieChart.data.datasets[0].data =
+[latest.cpu,latest.ram,latest.storage];
+pieChart.update();
+}
+
+});
+}
+
+</script>
+
+</body>
+</html>

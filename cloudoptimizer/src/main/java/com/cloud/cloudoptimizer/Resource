@@ -1,0 +1,30 @@
+package com.cloud.cloudoptimizer.model;
+
+public class Resource {
+
+    private int cpu;
+    private int ram;
+    private int storage;
+
+    // Constructor
+    public Resource(int cpu, int ram, int storage) {
+        this.cpu = cpu;
+        this.ram = ram;
+        this.storage = storage;
+    }
+
+    // Getter for CPU
+    public int getCpu() {
+        return cpu;
+    }
+
+    // Getter for RAM
+    public int getRam() {
+        return ram;
+    }
+
+    // Getter for Storage
+    public int getStorage() {
+        return storage;
+    }
+}
