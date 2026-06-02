@@ -64,18 +64,16 @@ RAM: ${ram}%
 Storage: ${storage}%`
         };
 
-        transporter.sendMail(mailOptions, (err, info) => {
-            if (err) {
-                console.log("❌ EMAIL ERROR:", err);
-                resource.emailStatus = "FAILED";
-            } else {
-                console.log("✅ EMAIL SENT:", info.response);
-                resource.emailStatus = "SENT";
-            }
-        });
+       transporter.sendMail(mailOptions, (err, info) => {
+    if (err) {
+        console.log("❌ FULL EMAIL ERROR:");
+        console.log(err);
+        resource.emailStatus = "FAILED";
+    } else {
+        console.log("✅ EMAIL SENT SUCCESS:");
+        console.log(info.response);
+        resource.emailStatus = "SENT";
     }
-
-    res.json(resource);
 });
 
 /* DELETE RESOURCE */
