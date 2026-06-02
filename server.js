@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
         user: "tirumulatirumula201@gmail.com",
-        pass: "huib ngek vbhc vmwm"
+        pass: "huib ngek vbhc vmwm"   // your Gmail App Password
     }
 });
 
@@ -31,22 +31,50 @@ app.get("/resources", (req, res) => {
     res.json(dataStore);
 });
 
-/* SAVE RESOURCE */
+/* SAVE RESOURCE + EMAIL ALERT */
 app.post("/resources", (req, res) => {
+
+    const cpu = Number(req.body.cpu);
+    const ram = Number(req.body.ram);
+    const storage = Number(req.body.storage);
+
     const resource = {
         id: Date.now(),
-        cpu: Number(req.body.cpu),
-        ram: Number(req.body.ram),
-        storage: Number(req.body.storage),
-        status:
-            req.body.cpu > 90 ||
-            req.body.ram > 85 ||
-            req.body.storage > 90
-                ? "HIGH"
-                : "NORMAL"
+        cpu,
+        ram,
+        storage,
+        status: (cpu > 90 || ram > 85 || storage > 90) ? "HIGH" : "NORMAL",
+        emailStatus: "NOT_SENT"
     };
 
     dataStore.push(resource);
+
+    console.log("RESOURCE SAVED:", resource);
+
+    /* 🚨 SEND EMAIL IF HIGH */
+    if (resource.status === "HIGH") {
+
+        const mailOptions = {
+            from: "tirumulatirumula201@gmail.com",
+            to: "tirumulatirumula201@gmail.com",
+            subject: "🚨 AI Cloud Resource Alert",
+            text: `HIGH USAGE DETECTED:
+CPU: ${cpu}%
+RAM: ${ram}%
+Storage: ${storage}%`
+        };
+
+        transporter.sendMail(mailOptions, (err, info) => {
+            if (err) {
+                console.log("❌ EMAIL ERROR:", err);
+                resource.emailStatus = "FAILED";
+            } else {
+                console.log("✅ EMAIL SENT:", info.response);
+                resource.emailStatus = "SENT";
+            }
+        });
+    }
+
     res.json(resource);
 });
 
@@ -56,44 +84,6 @@ app.delete("/resources/:id", (req, res) => {
     dataStore = dataStore.filter(item => item.id !== id);
 
     res.json({ message: "Deleted successfully" });
-});
-
-/* ALERT + EMAIL */
-app.post("/alert", (req, res) => {
-    const cpu = Number(req.body.cpu);
-    const ram = Number(req.body.ram);
-    const storage = Number(req.body.storage);
-
-    let status = "NORMAL";
-
-    if (cpu > 90 || ram > 85 || storage > 90) {
-        status = "CRITICAL";
-
-        const mailOptions = {
-            from: "tirumulatirumula201@gmail.com",
-            to: "tirumulatirumula201@gmail.com",
-            subject: "🚨 AI Cloud Alert",
-            text: `CPU: ${cpu}% RAM: ${ram}% Storage: ${storage}%`
-        };
-
-        transporter.sendMail(mailOptions, (err, info) => {
-            if (err) {
-                console.log("EMAIL ERROR:", err);
-                return res.json({ status, emailStatus: "FAILED" });
-            }
-
-            console.log("EMAIL SENT:", info.response);
-            return res.json({ status, emailStatus: "SENT" });
-        });
-
-        return;
-    }
-
-    if (cpu > 70 || ram > 70) {
-        status = "WARNING";
-    }
-
-    res.json({ status, emailStatus: "NOT_SENT" });
 });
 
 /* START SERVER */
