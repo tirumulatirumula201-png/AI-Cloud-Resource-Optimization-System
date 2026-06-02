@@ -47,12 +47,17 @@ app.post("/resources", (req, res) => {
         emailStatus: "NOT_SENT"
     };
 
+    /* DEBUG LOG (CORRECT PLACE) */
+    console.log("EMAIL TRIGGER CHECK → STATUS:", resource.status);
+
     dataStore.push(resource);
 
     console.log("RESOURCE SAVED:", resource);
 
     /* 🚨 SEND EMAIL IF HIGH */
     if (resource.status === "HIGH") {
+
+        console.log("🚨 ENTERED HIGH BLOCK → EMAIL START");
 
         const mailOptions = {
             from: "tirumulatirumula201@gmail.com",
